@@ -30,6 +30,12 @@
     <ClInclude Include="Include\ThreadPool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\Socket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\File.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Directory.cpp">
@@ -39,6 +45,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\ThreadPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Socket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\File.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

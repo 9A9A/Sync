@@ -42,7 +42,7 @@ int main ( )
          std::wcout << change.m_pDir->GetName ( ) << change.m_Filename << std::endl;
       };
       dir.OnChange = output;
-      for ( size_t i = 0; i < 512; ++i )
+      for ( size_t i = 0; i < 128; ++i )
       {
          dir.RequestCheckChanges ( ( CompletionPort* ) &ThreadPool::Instance ( ) );
       }

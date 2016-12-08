@@ -55,7 +55,12 @@ void ThreadPool::Execute ( )
                             break;
                         }
                     }
-                    dir->RequestCheckChanges ( ( CompletionPort* )this , pOvlpEx );
+                    pOvlpEx->reset ( );
+                    pOvlpEx->Operation = OverlappedEx::ReadDirChanges;
+                    pOvlpEx->Device = dir->Handle ( );
+                    pOvlpEx->Flags = dir->Flags ( );
+                    dir->CheckChanges ( pOvlpEx );
+                    //dir->RequestCheckChanges ( ( CompletionPort* )this , pOvlpEx );
                 }
                 break;
             }

@@ -50,9 +50,11 @@ public:
    std::pair<int , DWORD> Create ( const std::wstring& dirname );
    bool IsSubdirectory ( Directory* subdir ) const;
    bool IsParentdirectory ( Directory* parentdir )const;
+   HANDLE Handle ( ) const;
    // returns true if directory handle != INVALID_HANDLE_VALUE
    bool IsValid ( )const;
    bool IsDirectoryEmpty ( ) const;
+   DWORD Flags ( ) const;
    Directory* CreateSubdirectory ( const std::wstring& subdir )const;
    // close directory handle and cancel all io
    bool Close ( );

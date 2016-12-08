@@ -131,13 +131,17 @@
   <ItemGroup>
     <ClInclude Include="Include\CompletionPort.h" />
     <ClInclude Include="Include\Directory.h" />
+    <ClInclude Include="Include\File.h" />
     <ClInclude Include="Include\ObjectPool.h" />
     <ClInclude Include="Include\Overlapped.h" />
+    <ClInclude Include="Include\Socket.h" />
     <ClInclude Include="Include\ThreadPool.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Directory.cpp" />
+    <ClCompile Include="Source\File.cpp" />
     <ClCompile Include="Source\Main.cpp" />
+    <ClCompile Include="Source\Socket.cpp" />
     <ClCompile Include="Source\ThreadPool.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

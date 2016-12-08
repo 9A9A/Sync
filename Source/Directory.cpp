@@ -107,6 +107,11 @@ bool Directory::IsParentdirectory ( Directory* parentdir ) const
    return ( parentdir && ( m_DirectoryName.size ( ) > parentdir->m_DirectoryName.size ( ) ) && ( m_DirectoryName.find ( parentdir->m_DirectoryName ) != std::wstring::npos ) ) ? true : false;
 }
 
+HANDLE Directory::Handle ( ) const
+{
+   return m_hDirectory;
+}
+
 bool Directory::IsValid ( ) const
 {
    return ( m_hDirectory != INVALID_HANDLE_VALUE ) ? true : false;
@@ -115,6 +120,11 @@ bool Directory::IsValid ( ) const
 bool Directory::IsDirectoryEmpty ( ) const
 {
    return ( ::PathIsDirectoryEmptyW ( m_DirectoryName.c_str ( ) ) ) ? true : false;
+}
+
+DWORD Directory::Flags ( ) const
+{
+   return m_Flags;
 }
 
 Directory* Directory::CreateSubdirectory ( const std::wstring& subdir ) const

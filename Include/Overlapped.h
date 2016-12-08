@@ -35,6 +35,11 @@ struct OverlappedEx : public OVERLAPPED
     enum OperationType : UCHAR
     {
         UndefinedOperation ,
+        AcceptEx,
+        ConnectEx,
+        DisconnectEx,
+        Ioctl,
+        LockEx,
         Read ,
         Write ,
         Recv ,
@@ -43,6 +48,11 @@ struct OverlappedEx : public OVERLAPPED
         SendTo ,
         SendFile ,
         ReadDirChanges ,
+        Req_Ioctl,
+        Req_AcceptEx,
+        Req_ConnectEx,
+        Req_DisconnectEx,
+        Req_LockEx,
         Req_Read ,
         Req_Write ,
         Req_ReadDirChanges ,
