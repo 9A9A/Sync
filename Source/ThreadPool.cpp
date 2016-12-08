@@ -24,19 +24,12 @@ void ThreadPool::Execute ( )
                 case OverlappedEx::Req_ReadDirChanges:
                 {
                     pOvlpEx->Operation = OverlappedEx::ReadDirChanges;
-                    auto result = ::ReadDirectoryChangesW ( pOvlpEx->Device ,
-                                                            pOvlpEx->Buffer ,
-                                                            pOvlpEx->Length ,
-                                                            TRUE ,
-                                                            pOvlpEx->Flags ,
-                                                            NULL ,
-                                                            pOvlpEx ,
-                                                            NULL );
-                    if ( !result )
+                    auto dir = reinterpret_cast< Directory* >( completionKey );
+                    auto result = dir->CheckChanges ( pOvlpEx );
+                    if ( !result.first )
                     {
-                        pOvlpEx->reset ( );
-                        Free ( pOvlpEx );
-                        //Free ( pOvlpEx );
+                       pOvlpEx->reset ( );
+                       Free ( pOvlpEx );
                     }
                 }
                 break;
@@ -49,10 +42,10 @@ void ThreadPool::Execute ( )
                         auto pNotify = reinterpret_cast< PFILE_NOTIFY_INFORMATION >( pOvlpEx->Buffer + offset );
                         offset += pNotify->NextEntryOffset;
                         Directory::Change change;
-                        ULONG len = min ( pNotify->FileNameLength / 2 , MAX_PATH - 1 );
-                        wcsncpy ( change.m_Filename , pNotify->FileName , len );
-                        change.m_Filename [ len ] = L'\0';
+                        change.m_Filename.resize ( pNotify->FileNameLength / 2 );
+                        wcsncpy ( const_cast< wchar_t* >( change.m_Filename.data ( ) ) , pNotify->FileName , pNotify->FileNameLength / 2 );
                         change.m_Action = pNotify->Action;
+                        change.m_pDir = dir;
                         if ( dir->OnChange )
                         {
                             dir->OnChange ( change );
@@ -62,7 +55,7 @@ void ThreadPool::Execute ( )
                             break;
                         }
                     }
-                    dir->MakeRequest ( pOvlpEx );
+                    dir->RequestCheckChanges ( ( CompletionPort* )this , pOvlpEx );
                 }
                 break;
             }

@@ -1,7 +1,7 @@
 #ifndef _OVERLAPPED_H_
 #define _OVERLAPPED_H_
 #include <Windows.h>
-#define DEFAULT_BUFFER_SIZE 8192
+#define DEFAULT_BUFFER_SIZE 32768
 #ifdef _WIN64
 #define OVERLAPPED_MAX_ENTRIES 32767
 #else
