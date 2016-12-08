@@ -2,6 +2,7 @@
 #include "Overlapped.h"
 #include "Directory.h"
 #include "ObjectPool.h"
+#include "Socket.h"
 thread_local TLSObjectPool<OverlappedEx> ThreadPool::m_ObjectPool;
 void ThreadPool::Execute ( )
 {
@@ -21,18 +22,58 @@ void ThreadPool::Execute ( )
         {
             switch ( pOvlpEx->Operation )
             {
-                case OverlappedEx::Req_ReadDirChanges:
+                case OverlappedEx::AcceptEx:
                 {
-                    pOvlpEx->Operation = OverlappedEx::ReadDirChanges;
-                    auto dir = reinterpret_cast< Directory* >( completionKey );
-                    auto result = dir->CheckChanges ( pOvlpEx );
-                    if ( !result.first )
-                    {
-                       pOvlpEx->reset ( );
-                       Free ( pOvlpEx );
-                    }
-                }
-                break;
+                    auto sock_t = reinterpret_cast< Socket* >( completionKey );
+                    Socket::EventHandlerAccept( sock_t , pOvlpEx );
+                } break;
+                case OverlappedEx::ConnectEx:
+                {
+                    auto sock_t = reinterpret_cast< Socket* >( completionKey );
+                    Socket::EventHandlerConnect ( sock_t , pOvlpEx );
+                } break;
+                case OverlappedEx::DisconnectEx:
+                {
+                    auto sock_t = reinterpret_cast< Socket* >( completionKey );
+                    Socket::EventHandlerDisconnect ( sock_t , pOvlpEx );
+                } break;
+                case OverlappedEx::Ioctl:
+                {
+                } break;
+                case OverlappedEx::LockEx:
+                {
+                } break;
+                case OverlappedEx::Read:
+                {
+                } break;
+                case OverlappedEx::Write:
+                {
+                } break;
+                case OverlappedEx::Recv:
+                {
+                    auto sock_t = reinterpret_cast< Socket* >( completionKey );
+                    Socket::EventHandlerRecv ( sock_t , pOvlpEx );
+                } break;
+                case OverlappedEx::RecvFrom:
+                {
+                    auto sock_t = reinterpret_cast< Socket* >( completionKey );
+                    Socket::EventHandlerRecvFrom ( sock_t , pOvlpEx );
+                } break;
+                case OverlappedEx::Send:
+                {
+                    auto sock_t = reinterpret_cast< Socket* >( completionKey );
+                    Socket::EventHandlerSend ( sock_t , pOvlpEx );
+                } break;
+                case OverlappedEx::SendTo:
+                {
+                    auto sock_t = reinterpret_cast< Socket* >( completionKey );
+                    Socket::EventHandlerSendTo ( sock_t , pOvlpEx );
+                } break;
+                case OverlappedEx::SendFile:
+                {
+                    auto sock_t = reinterpret_cast< Socket* >( completionKey );
+                    Socket::EventHandlerSendFile ( sock_t , pOvlpEx );
+                } break;
                 case OverlappedEx::ReadDirChanges:
                 {
                     auto dir = reinterpret_cast< Directory* >( completionKey );
@@ -60,9 +101,54 @@ void ThreadPool::Execute ( )
                     pOvlpEx->Device = dir->Handle ( );
                     pOvlpEx->Flags = dir->Flags ( );
                     dir->CheckChanges ( pOvlpEx );
-                    //dir->RequestCheckChanges ( ( CompletionPort* )this , pOvlpEx );
-                }
-                break;
+                } break;
+                case OverlappedEx::Req_Ioctl:
+                {
+                } break;
+                case OverlappedEx::Req_AcceptEx:
+                {
+                } break;
+                case OverlappedEx::Req_ConnectEx:
+                {
+                } break;
+                case OverlappedEx::Req_DisconnectEx:
+                {
+                } break;
+                case OverlappedEx::Req_LockEx:
+                {
+                } break;
+                case OverlappedEx::Req_Read:
+                {
+                } break;
+                case OverlappedEx::Req_Write:
+                {
+                } break;
+                case OverlappedEx::Req_ReadDirChanges:
+                {
+                    pOvlpEx->Operation = OverlappedEx::ReadDirChanges;
+                    auto dir = reinterpret_cast< Directory* >( completionKey );
+                    auto result = dir->CheckChanges ( pOvlpEx );
+                    if ( !result.first )
+                    {
+                        pOvlpEx->reset ( );
+                        Free ( pOvlpEx );
+                    }
+                } break;
+                case OverlappedEx::Req_Recv:
+                {
+                } break;
+                case OverlappedEx::Req_RecvFrom:
+                {
+                } break;
+                case OverlappedEx::Req_Send:
+                {
+                } break;
+                case OverlappedEx::Req_SendTo:
+                {
+                } break;
+                case OverlappedEx::Req_SendFile:
+                {
+                } break;
             }
         }
         else

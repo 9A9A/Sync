@@ -2,8 +2,8 @@
 #define _SOCKET_H_
 #include <Windows.h>
 #include <winsock2.h>
-#include <MSWSock.h>
 #include "Overlapped.h"
+#include "CompletionPort.h"
 #include <functional>
 #include <atomic>
 #include <unordered_map>
@@ -28,8 +28,10 @@ public:
    size_t BytesSent ( )const;
    size_t BytesReceived ( )const;
 
+   void RegisterOnCompletionPort ( CompletionPort* );
    void Close ( );
    void Bind ( );
+   void Bind ( USHORT port );
    void Listen ( const int clients );
    void Accept ( OverlappedEx* ov );
    void Connect ( OverlappedEx* ov , sockaddr* addr );
@@ -70,8 +72,22 @@ public:
    void RegisterOnRecvFrom ( const EventRecvFrom& );
    void RegisterOnSend ( const EventSend& );
    void RegisterOnSendTo ( const EventSendTo& );
+   void InheritCallbacks ( Socket* );
    void UnregisterAll ( );
+
+   static SOCKET InitializeSocket ( SockType );
+   
+   static void EventHandlerAccept ( Socket* , OverlappedEx* );
+   static void EventHandlerConnect ( Socket* , OverlappedEx* );
+   static void EventHandlerDisconnect ( Socket* , OverlappedEx* );
+   static void EventHandlerIoctl ( Socket* , OverlappedEx* );
+   static void EventHandlerRecv ( Socket* , OverlappedEx* );
+   static void EventHandlerRecvFrom ( Socket* , OverlappedEx* );
+   static void EventHandlerSend ( Socket* , OverlappedEx* );
+   static void EventHandlerSendFile ( Socket* , OverlappedEx* );
+   static void EventHandlerSendTo ( Socket* , OverlappedEx* );
 private:
+
    EventAccept OnAccept;
    EventConnect OnConnect;
    EventDisconnect OnDisconnect;
