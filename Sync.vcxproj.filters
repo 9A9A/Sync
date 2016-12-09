@@ -36,6 +36,9 @@
     <ClInclude Include="Include\File.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\NetworkAddress.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Directory.cpp">
@@ -51,6 +54,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\File.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\NetworkAddress.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

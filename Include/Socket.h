@@ -1,13 +1,16 @@
 #ifndef _SOCKET_H_
 #define _SOCKET_H_
-#include <Windows.h>
 #include <winsock2.h>
+#include <WS2tcpip.h>
+#include <MSWSock.h>
+#include <Windows.h>
 #include "Overlapped.h"
 #include "CompletionPort.h"
 #include <functional>
 #include <atomic>
 #include <unordered_map>
 #include <mutex>
+#include "NetworkAddress.h"
 
 class Socket
 {
@@ -17,13 +20,19 @@ public:
       TCP = SOCK_STREAM ,
       UDP = SOCK_DGRAM ,
    };
-   Socket ( SockType );
-   Socket ( SockType , SOCKET );
+   enum IPType : UCHAR
+   {
+      IPv4 = AF_INET ,
+      IPv6 = AF_INET6 ,
+   };
+   Socket ( SockType , IPType = IPv4 );
+   Socket ( SockType , SOCKET , IPType = IPv4 );
 
    virtual ~Socket ( );
 
    SOCKET Handle ( )const;
    SockType SocketType ( )const;
+   IPType IPFamily ( )const;
 
    size_t BytesSent ( )const;
    size_t BytesReceived ( )const;
@@ -54,15 +63,15 @@ public:
    void RequestSendFile ( OverlappedEx* ov = nullptr );
    void RequestSendTo ( OverlappedEx* ov = nullptr );
 
-   using EventAccept = std::function<void ( Socket* , sockaddr* )>;
-   using EventConnect = std::function<void ( Socket* , sockaddr* )>;
-   using EventDisconnect = std::function<void ( Socket* , sockaddr* )>;
+   using EventAccept = std::function<void ( Socket* , NetworkAddress* )>;
+   using EventConnect = std::function<void ( Socket* , NetworkAddress* )>;
+   using EventDisconnect = std::function<void ( Socket* , NetworkAddress* )>;
    using EventError = std::function<void ( Socket* , DWORD )>;
    using EventIoctl = std::function<void ( Socket* )>;
    using EventRecv = std::function<void ( Socket* , LPWSABUF , DWORD )>;
-   using EventRecvFrom = std::function<void ( Socket* , LPWSABUF , DWORD , sockaddr* )>;
+   using EventRecvFrom = std::function<void ( Socket* , LPWSABUF , DWORD , NetworkAddress* )>;
    using EventSend = std::function<void ( Socket* , DWORD )>;
-   using EventSendTo = std::function<void ( Socket* , DWORD , sockaddr* )>;
+   using EventSendTo = std::function<void ( Socket* , DWORD , NetworkAddress* )>;
 
    void RegisterOnAccept ( const EventAccept& );
    void RegisterOnConnect ( const EventConnect& );
@@ -75,17 +84,26 @@ public:
    void InheritCallbacks ( Socket* );
    void UnregisterAll ( );
 
-   static SOCKET InitializeSocket ( SockType );
-   
-   static void EventHandlerAccept ( Socket* , OverlappedEx* );
-   static void EventHandlerConnect ( Socket* , OverlappedEx* );
-   static void EventHandlerDisconnect ( Socket* , OverlappedEx* );
-   static void EventHandlerIoctl ( Socket* , OverlappedEx* );
-   static void EventHandlerRecv ( Socket* , OverlappedEx* );
-   static void EventHandlerRecvFrom ( Socket* , OverlappedEx* );
-   static void EventHandlerSend ( Socket* , OverlappedEx* );
-   static void EventHandlerSendFile ( Socket* , OverlappedEx* );
-   static void EventHandlerSendTo ( Socket* , OverlappedEx* );
+   static SOCKET InitializeSocket ( SockType , IPType = IPv4 );
+
+   static void EventHandlerAccept ( Socket* , OverlappedEx* , DWORD  );
+   static void EventHandlerConnect ( Socket* , OverlappedEx* , DWORD  );
+   static void EventHandlerDisconnect ( Socket* , OverlappedEx* , DWORD  );
+   static void EventHandlerIoctl ( Socket* , OverlappedEx* , DWORD  );
+   static void EventHandlerRecv ( Socket* , OverlappedEx* , DWORD  );
+   static void EventHandlerRecvFrom ( Socket* , OverlappedEx* , DWORD  );
+   static void EventHandlerSend ( Socket* , OverlappedEx* , DWORD  );
+   static void EventHandlerSendFile ( Socket* , OverlappedEx* , DWORD  );
+   static void EventHandlerSendTo ( Socket* , OverlappedEx* , DWORD  );
+
+   static LPFN_ACCEPTEX _AcceptEx;
+   static LPFN_CONNECTEX _ConnectEx;
+   static LPFN_DISCONNECTEX _DisconnectEx;
+   static LPFN_GETACCEPTEXSOCKADDRS _GetAcceptExSockaddrs;
+   static LPFN_TRANSMITFILE _TransmitFile;
+   static LPFN_TRANSMITPACKETS _TransmitPackets;
+
+
 private:
 
    EventAccept OnAccept;
@@ -96,7 +114,7 @@ private:
    EventRecv OnRecv;
    EventRecvFrom OnRecvFrom;
    EventSend OnSend;
-   EventSendTo OnSendTo; 
+   EventSendTo OnSendTo;
 
 
    mutable std::mutex m_Locker;
@@ -107,6 +125,21 @@ private:
    std::unordered_map<size_t , OverlappedEx*> m_ReorderQueue;
    SOCKET m_hSocket;
    SockType m_SockType;
+   IPType m_IPType;
+};
+class NetworkingInitialization
+{
+   WSADATA m_WsaData;
+   GUID m_AcceptEx;
+   GUID m_ConnectEx;
+   GUID m_DisconnectEx;
+   GUID m_GetAcceptExSockaddrs;
+   GUID m_TransmitFile;
+   GUID m_TransmitPackets;
+   NetworkingInitialization ( );
+   ~NetworkingInitialization ( );
+public:
+   static NetworkingInitialization& Instance ( );
 };
 
 #endif
