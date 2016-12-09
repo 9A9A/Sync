@@ -1,6 +1,7 @@
 #ifndef _OVERLAPPED_H_
 #define _OVERLAPPED_H_
 #include <Windows.h>
+#include "NetworkAddress.h"
 #define DEFAULT_BUFFER_SIZE 32768
 #ifdef _WIN64
 #define OVERLAPPED_MAX_ENTRIES 32767
@@ -31,6 +32,8 @@ struct OverlappedEx : public OVERLAPPED
         Flags = 0;
         Operation = UndefinedOperation;
         Device = INVALID_HANDLE_VALUE;
+        Socket = INVALID_SOCKET;
+        SequenceNum = 0;
     }
     enum OperationType : UCHAR
     {
@@ -66,6 +69,10 @@ struct OverlappedEx : public OVERLAPPED
     DWORD Flags;
     HANDLE Device;
     DWORD Length;
+    SOCKET Socket;
+    uint64_t SequenceNum;
+    int AddrLen;
+    NetworkAddress NetAddr;
     OperationType Operation;
 };
 #endif // _OVERLAPPED_H_
