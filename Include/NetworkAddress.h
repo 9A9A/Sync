@@ -1,13 +1,16 @@
 #ifndef _NETWORK_ADDRESS_H_
 #define _NETWORK_ADDRESS_H_
-#include "Socket.h"
+#define WIN32_LEAN_AND_MEAN
+#include <WinSock2.h>
+#include <Ws2ipdef.h>
+#include <Windows.h>
+#include <iostream>
 union net_sockaddr
 {
    sockaddr addr;
    sockaddr_in addr4;
    sockaddr_in6 addr6;
 };
-//https://github.com/jselbie/stunserver/blob/master/stuncore/socketaddress.h
 class NetworkAddress
 {
    net_sockaddr m_address;
@@ -22,7 +25,9 @@ public:
 
    uint16_t GetPort ( )const;
    uint32_t GetPort_NetByteOrder ( )const;
-   void SetPort ( uint16_t );
+   void Set_Port ( uint16_t );
+   const sockaddr* GetSockAddr ( ) const;
+   int GetSockAddrLen ( )const;
 
    uint16_t GetIpLength ( ) const;
 

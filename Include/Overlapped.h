@@ -1,5 +1,6 @@
 #ifndef _OVERLAPPED_H_
 #define _OVERLAPPED_H_
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include "NetworkAddress.h"
 #define DEFAULT_BUFFER_SIZE 32768
@@ -8,6 +9,7 @@
 #else
 #define OVERLAPPED_MAX_ENTRIES 2500
 #endif
+#define SYSTEM_ERROR(message) throw std::system_error ( std::error_code ( ::GetLastError ( ) , std::generic_category ( ) ) , message )
 
 struct OverlappedEx : public OVERLAPPED
 {
@@ -31,7 +33,9 @@ struct OverlappedEx : public OVERLAPPED
         hEvent = 0;
         Flags = 0;
         Operation = UndefinedOperation;
-        Device = INVALID_HANDLE_VALUE;
+        Handle = INVALID_HANDLE_VALUE;
+        BufferHolder.buf = nullptr;
+        BufferHolder.len = 0;
         Socket = INVALID_SOCKET;
         SequenceNum = 0;
     }
@@ -66,8 +70,9 @@ struct OverlappedEx : public OVERLAPPED
         Req_SendFile ,
     };
     CHAR* Buffer;
+    WSABUF BufferHolder;
     DWORD Flags;
-    HANDLE Device;
+    HANDLE Handle;
     DWORD Length;
     SOCKET Socket;
     uint64_t SequenceNum;

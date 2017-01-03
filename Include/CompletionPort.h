@@ -2,6 +2,7 @@
 #define _COMPLETION_PORT_H_
 #include <Windows.h>
 #include <string>
+#include <atomic>
 class CompletionPort
 {
     HANDLE m_hPort;
@@ -14,7 +15,7 @@ public:
             throw std::runtime_error ( "Unable to create io completion port : " + std::to_string ( GetLastError ( ) ) );
         }
     }
-    CompletionPort ( HANDLE handle , ULONG_PTR completion_key )
+    explicit CompletionPort ( HANDLE handle , ULONG_PTR completion_key )
     {
         m_hPort = ::CreateIoCompletionPort ( handle , NULL , completion_key , NULL );
         if ( m_hPort == INVALID_HANDLE_VALUE )
@@ -46,5 +47,16 @@ public:
     {
         return std::pair<BOOL , size_t> ( ::PostQueuedCompletionStatus ( m_hPort , bytes_transferred , completion_key , overlapped ) , ::GetLastError ( ) );
     }
+};
+class Async
+{
+protected:
+    std::atomic<size_t> m_nPendingOperations;
+public:
+    Async ( ) :
+        m_nPendingOperations ( 0 )
+    {
+    }
+    virtual void RegisterOnCompletionPort ( CompletionPort& ) = 0;
 };
 #endif

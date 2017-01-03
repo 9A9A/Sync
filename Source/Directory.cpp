@@ -59,7 +59,7 @@ void Directory::RequestCheckChanges ( CompletionPort* port , OverlappedEx* ev /*
       ev = ( !ev ) ? ThreadPool::Instance ( ).Allocate ( ) : ev;
       ev->reset ( );
       ev->Operation = OverlappedEx::Req_ReadDirChanges;
-      ev->Device = m_hDirectory;
+      ev->Handle = m_hDirectory;
       ev->Flags = m_Flags;
       LPOVERLAPPED ovlp = ( LPOVERLAPPED ) ev;
       port->PostQueuedCompletionStatus ( NULL , ( ULONG_PTR )this , ovlp );
@@ -172,6 +172,6 @@ std::pair<int,DWORD> Directory::Open ( const std::wstring& str )
    }
    else
    {
-      throw std::runtime_error ( "Can't open : path isn't directory" );
+       SYSTEM_ERROR ( "Can't open : path isn't directory" );
    }
 }

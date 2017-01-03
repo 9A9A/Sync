@@ -68,7 +68,7 @@ uint32_t NetworkAddress::GetPort_NetByteOrder ( ) const
    return ( m_address.addr.sa_family == AF_INET ) ? m_address.addr4.sin_port : m_address.addr6.sin6_port;
 }
 
-void NetworkAddress::SetPort ( uint16_t port )
+void NetworkAddress::Set_Port ( uint16_t port )
 {
    if ( m_address.addr.sa_family == AF_INET )
    {
@@ -78,6 +78,16 @@ void NetworkAddress::SetPort ( uint16_t port )
    {
       m_address.addr6.sin6_port = htons ( port );
    }
+}
+
+const sockaddr* NetworkAddress::GetSockAddr ( ) const
+{
+    return &m_address.addr;
+}
+
+int NetworkAddress::GetSockAddrLen ( ) const
+{
+    return ( m_address.addr.sa_family == AF_INET ) ? sizeof ( m_address.addr4 ) : sizeof ( m_address.addr6 );
 }
 
 uint16_t NetworkAddress::GetIpLength ( ) const
@@ -126,12 +136,11 @@ bool NetworkAddress::IsSameIp ( NetworkAddress& rhs ) const
 }
 bool NetworkAddress::IsSameIpAndPort ( NetworkAddress& ) const
 {
-
+    return true;
 }
 
 std::string NetworkAddress::ToString ( ) const
 {
-
    return std::string ( );
 }
 

@@ -5,141 +5,168 @@
 #include <MSWSock.h>
 #include <Windows.h>
 #include "Overlapped.h"
+#include <memory>
 #include "CompletionPort.h"
 #include <functional>
 #include <atomic>
 #include <unordered_map>
 #include <mutex>
-#include "NetworkAddress.h"
 
-class Socket
+class NetworkSocket
 {
 public:
-   enum SockType : UCHAR
-   {
-      TCP = SOCK_STREAM ,
-      UDP = SOCK_DGRAM ,
-   };
-   enum IPType : UCHAR
-   {
-      IPv4 = AF_INET ,
-      IPv6 = AF_INET6 ,
-   };
-   Socket ( SockType , IPType = IPv4 );
-   Socket ( SockType , SOCKET , IPType = IPv4 );
+    enum SocketType
+    {
+        TCP = SOCK_STREAM ,
+        UDP = SOCK_DGRAM ,
+    };
+    enum IPFamily
+    {
+        IPv4 = AF_INET ,
+        IPv6 = AF_INET6 ,
+    };
+    virtual ~NetworkSocket ( )
+    {
+        std::cout << "NetworkSocket class destroyed\n";
+    }
+    size_t BytesSent ( )const
+    {
+        std::lock_guard<std::recursive_mutex> lock ( m_Locker );
+        return m_nBtSnt;
+    }
+    size_t BytesRecv ( )const
+    {
+        std::lock_guard<std::recursive_mutex> lock ( m_Locker );
+        return m_nBtRcv;
+    }
+    bool IsValid ( )const
+    {
+        std::lock_guard<std::recursive_mutex> lock ( m_Locker );
+        return ( m_hSocket != INVALID_SOCKET ) ? true : false;
+    }
+    void Bind ( unsigned short int port );
+    void Close ( );
 
-   virtual ~Socket ( );
+    virtual void InheritCallbacks ( NetworkSocket* );
+    using EventIoctl = std::function<void ( NetworkSocket* )>;
+    void RegisterOnIoctl ( const EventIoctl& );
+    static SOCKET InitSocket ( SocketType type , IPFamily family = IPv4 );
+protected:
+    SOCKET m_hSocket;
+    mutable std::recursive_mutex m_Locker;
+    size_t m_nBtSnt;
+    size_t m_nBtRcv;
+    NetworkSocket ( ) :
+        m_hSocket ( INVALID_SOCKET ) ,
+        m_nBtSnt ( 0 ) ,
+        m_nBtRcv ( 0 )
+    {
+    }
+    NetworkSocket ( const NetworkSocket& ) = delete;
+    NetworkSocket ( SOCKET sock ) :
+        m_hSocket ( sock ) ,
+        m_nBtSnt ( 0 ) ,
+        m_nBtRcv ( 0 )
+    {
+    }
+    NetworkSocket ( SocketType type ) :
+        m_hSocket ( InitSocket ( type ) ) ,
+        m_nBtSnt ( 0 ) ,
+        m_nBtRcv ( 0 )
+    {
+    }
 
-   SOCKET Handle ( )const;
-   SockType SocketType ( )const;
-   IPType IPFamily ( )const;
+};
 
-   size_t BytesSent ( )const;
-   size_t BytesReceived ( )const;
+class UDPASocket : public Async , public NetworkSocket , public std::enable_shared_from_this<UDPASocket>
+{
+public:
+    virtual ~UDPASocket ( );
+    static std::shared_ptr<UDPASocket> Create ( );
 
-   void RegisterOnCompletionPort ( CompletionPort* );
-   void Close ( );
-   void Bind ( );
-   void Bind ( USHORT port );
-   void Listen ( const int clients );
-   void Accept ( OverlappedEx* ov );
-   void Connect ( OverlappedEx* ov , sockaddr* addr );
-   void Disconnect ( OverlappedEx* ov );
-   void Ioctl ( OverlappedEx* ov );
-   void RecvFrom ( OverlappedEx* ov , LPWSABUF bufs , DWORD count );
-   void Recv ( OverlappedEx* ov , LPWSABUF bufs , DWORD count );
-   void Send ( OverlappedEx* ov , LPWSABUF bufs , DWORD count );
-   void SendTo ( OverlappedEx* ov , LPWSABUF bufs , DWORD count );
-   void SendFile ( OverlappedEx* ov );
+    using EventRecv = std::function<void ( UDPASocket& , NetworkAddress* , char* , size_t )>;
+    using EventSend = std::function<void ( UDPASocket& , NetworkAddress* , size_t )>;
+    using EventClose = std::function<void ( UDPASocket& , DWORD errorCode )>;
 
+    void RequestRecvFrom ( CompletionPort& port , OverlappedEx* ev = nullptr );
+    void RequestSendTo ( CompletionPort& port , char* pbuffer , unsigned int buf_len , NetworkAddress& addr , OverlappedEx* ev = nullptr );
 
-   void RequestAccept ( OverlappedEx* ov = nullptr );
-   void RequestConnect ( sockaddr* addr , OverlappedEx* ov = nullptr );
-   void RequestDisconnect ( OverlappedEx* ov = nullptr );
-   void RequestIoctl ( OverlappedEx* ov = nullptr );
-   void RequestRecv ( OverlappedEx* ov = nullptr );
-   void RequestRecvFrom ( OverlappedEx* ov = nullptr );
-   void RequestSend ( OverlappedEx* ov = nullptr );
-   void RequestSendFile ( OverlappedEx* ov = nullptr );
-   void RequestSendTo ( OverlappedEx* ov = nullptr );
+    void RegisterOnClose ( const EventClose& );
+    void RegisterOnRecv ( const EventRecv& );
+    void RegisterOnSend ( const EventSend& );
 
-   using EventAccept = std::function<void ( Socket* , NetworkAddress* )>;
-   using EventConnect = std::function<void ( Socket* , NetworkAddress* )>;
-   using EventDisconnect = std::function<void ( Socket* , NetworkAddress* )>;
-   using EventError = std::function<void ( Socket* , DWORD )>;
-   using EventIoctl = std::function<void ( Socket* )>;
-   using EventRecv = std::function<void ( Socket* , LPWSABUF , DWORD )>;
-   using EventRecvFrom = std::function<void ( Socket* , LPWSABUF , DWORD , NetworkAddress* )>;
-   using EventSend = std::function<void ( Socket* , DWORD )>;
-   using EventSendTo = std::function<void ( Socket* , DWORD , NetworkAddress* )>;
+    void UnregisterAllCallbacks ( );
 
-   void RegisterOnAccept ( const EventAccept& );
-   void RegisterOnConnect ( const EventConnect& );
-   void RegisterOnDisconnect ( const EventDisconnect& );
-   void RegisterOnIoctl ( const EventIoctl& );
-   void RegisterOnRecv ( const EventRecv& );
-   void RegisterOnRecvFrom ( const EventRecvFrom& );
-   void RegisterOnSend ( const EventSend& );
-   void RegisterOnSendTo ( const EventSendTo& );
-   void InheritCallbacks ( Socket* );
-   void UnregisterAll ( );
+    virtual void RegisterOnCompletionPort ( CompletionPort& );
 
-   static SOCKET InitializeSocket ( SockType , IPType = IPv4 );
+    static void EventHandlerRecvFrom ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode );
+    static void EventHandlerSendTo ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode );
+    static void EventHandlerRequestRecvFrom ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode );
+    static void EventHandlerRequestSendTo ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode );
+    static void EventHandlerClose ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode );
+    UDPASocket ( );
+protected:
+    std::pair<int , DWORD> RecvFrom ( OverlappedEx* ev , LPWSABUF bufs , DWORD count );
+    std::pair<int , DWORD> SendTo ( OverlappedEx* ev , LPWSABUF bufs , DWORD count );
+    size_t m_nRcvSeqPosted;
+    size_t m_nRcvSeqCompleted;
+    UDPASocket ( const UDPASocket& ) = delete;
+    EventClose OnClose;
+    EventRecv OnRecv;
+    EventSend OnSend;
+    std::shared_ptr<UDPASocket>* m_pCompletionKey;
+    std::unordered_map<size_t , OverlappedEx*> m_RrdQueue;
+};
+class TCPASocket : public Async , public NetworkSocket , public std::enable_shared_from_this<TCPASocket>
+{
+protected:
+    size_t m_nRcvSeqPosted;
+    size_t m_nRcvSeqCompleted;
+public:
+    static std::shared_ptr<TCPASocket> Create ( );
+    using EventAccept = std::function<void ( TCPASocket& , NetworkAddress* )>;
+    using EventConnect = std::function<void ( TCPASocket& , NetworkAddress* )>;
+    using EventDisconnect = std::function<void ( TCPASocket& )>;
+    using EventRecv = std::function<void ( TCPASocket& , char* , size_t )>;
+    using EventSend = std::function<void ( TCPASocket& , size_t )>;
 
-   static void EventHandlerAccept ( Socket* , OverlappedEx* , DWORD  );
-   static void EventHandlerConnect ( Socket* , OverlappedEx* , DWORD  );
-   static void EventHandlerDisconnect ( Socket* , OverlappedEx* , DWORD  );
-   static void EventHandlerIoctl ( Socket* , OverlappedEx* , DWORD  );
-   static void EventHandlerRecv ( Socket* , OverlappedEx* , DWORD  );
-   static void EventHandlerRecvFrom ( Socket* , OverlappedEx* , DWORD  );
-   static void EventHandlerSend ( Socket* , OverlappedEx* , DWORD  );
-   static void EventHandlerSendFile ( Socket* , OverlappedEx* , DWORD  );
-   static void EventHandlerSendTo ( Socket* , OverlappedEx* , DWORD  );
+    void Listen ( );
 
-   static LPFN_ACCEPTEX _AcceptEx;
-   static LPFN_CONNECTEX _ConnectEx;
-   static LPFN_DISCONNECTEX _DisconnectEx;
-   static LPFN_GETACCEPTEXSOCKADDRS _GetAcceptExSockaddrs;
-   static LPFN_TRANSMITFILE _TransmitFile;
-   static LPFN_TRANSMITPACKETS _TransmitPackets;
+    void RegisterOnAccept ( const EventAccept& );
+    void RegisterOnConnect ( const EventConnect& );
+    void RegisterOnDisconnect ( const EventDisconnect& );
+    void RegisterOnRecv ( const EventRecv& );
+    void RegisterOnSend ( const EventSend& );
 
+    virtual void InheritCallbacks ( NetworkSocket* )override;
+    virtual void RegisterOnCompletionPort ( CompletionPort& );
 
-private:
-
-   EventAccept OnAccept;
-   EventConnect OnConnect;
-   EventDisconnect OnDisconnect;
-   EventError OnError;
-   EventIoctl OnIoctl;
-   EventRecv OnRecv;
-   EventRecvFrom OnRecvFrom;
-   EventSend OnSend;
-   EventSendTo OnSendTo;
-
-
-   mutable std::mutex m_Locker;
-   std::atomic<size_t> m_nBytesSent;
-   std::atomic<size_t> m_nBytesRecv;
-   std::atomic<size_t> m_nPostedSeqNum;
-   std::atomic<size_t> m_nCompletedSeqNum;
-   std::unordered_map<size_t , OverlappedEx*> m_ReorderQueue;
-   SOCKET m_hSocket;
-   SockType m_SockType;
-   IPType m_IPType;
+    static void EventHandlerAccept ( std::shared_ptr<TCPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode );
+    static void EventHandlerConnect ( std::shared_ptr<TCPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode );
+    static void EventHandlerDisconnect ( std::shared_ptr<TCPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode );
+    static void EventHandlerRecv ( std::shared_ptr<TCPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode );
+    static void EventHandlerSend ( std::shared_ptr<TCPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode );
 };
 class NetworkingInitialization
 {
-   WSADATA m_WsaData;
-   GUID m_AcceptEx;
-   GUID m_ConnectEx;
-   GUID m_DisconnectEx;
-   GUID m_GetAcceptExSockaddrs;
-   GUID m_TransmitFile;
-   GUID m_TransmitPackets;
-   NetworkingInitialization ( );
-   ~NetworkingInitialization ( );
+    WSADATA m_WsaData;
+    GUID m_AcceptEx;
+    GUID m_ConnectEx;
+    GUID m_DisconnectEx;
+    GUID m_GetAcceptExSockaddrs;
+    GUID m_TransmitFile;
+    GUID m_TransmitPackets;
+    NetworkingInitialization ( );
+    ~NetworkingInitialization ( );
 public:
-   static NetworkingInitialization& Instance ( );
+    static NetworkingInitialization& Instance ( );
+
+    static LPFN_ACCEPTEX _AcceptEx;
+    static LPFN_CONNECTEX _ConnectEx;
+    static LPFN_DISCONNECTEX _DisconnectEx;
+    static LPFN_GETACCEPTEXSOCKADDRS _GetAcceptExSockaddrs;
+    static LPFN_TRANSMITFILE _TransmitFile;
+    static LPFN_TRANSMITPACKETS _TransmitPackets;
 };
 
 #endif

@@ -12,176 +12,87 @@ void ThreadPool::Execute ( )
    ULONG_PTR completionKey;
    while ( true )
    {
-      auto status = GetQueuedCompletionStatus ( &bytesTransferred , &completionKey , &pOverlapped , INFINITE );
-      if ( !completionKey && !pOverlapped )
-      {
-         PostQueuedCompletionStatus ( NULL , NULL , NULL );
-         break;
-      }
-      auto pOvlpEx = ( OverlappedEx * ) pOverlapped;
-      if ( status.first )
-      {
-         switch ( pOvlpEx->Operation )
-         {
-         case OverlappedEx::AcceptEx:
-         {
-            auto sock_t = reinterpret_cast< Socket* >( completionKey );
-            Socket::EventHandlerAccept ( sock_t , pOvlpEx , bytesTransferred );
-         }
-         break;
-         case OverlappedEx::ConnectEx:
-         {
-            auto sock_t = reinterpret_cast< Socket* >( completionKey );
-            Socket::EventHandlerConnect ( sock_t , pOvlpEx , bytesTransferred );
-         }
-         break;
-         case OverlappedEx::DisconnectEx:
-         {
-            auto sock_t = reinterpret_cast< Socket* >( completionKey );
-            Socket::EventHandlerDisconnect ( sock_t , pOvlpEx , bytesTransferred );
-         }
-         break;
-         case OverlappedEx::Ioctl:
-         {
-         }
-         break;
-         case OverlappedEx::LockEx:
-         {
-         }
-         break;
-         case OverlappedEx::Read:
-         {
-         }
-         break;
-         case OverlappedEx::Write:
-         {
-         }
-         break;
-         case OverlappedEx::Recv:
-         {
-            auto sock_t = reinterpret_cast< Socket* >( completionKey );
-            Socket::EventHandlerRecv ( sock_t , pOvlpEx , bytesTransferred );
-         }
-         break;
-         case OverlappedEx::RecvFrom:
-         {
-            auto sock_t = reinterpret_cast< Socket* >( completionKey );
-            Socket::EventHandlerRecvFrom ( sock_t , pOvlpEx , bytesTransferred );
-         }
-         break;
-         case OverlappedEx::Send:
-         {
-            auto sock_t = reinterpret_cast< Socket* >( completionKey );
-            Socket::EventHandlerSend ( sock_t , pOvlpEx , bytesTransferred );
-         }
-         break;
-         case OverlappedEx::SendTo:
-         {
-            auto sock_t = reinterpret_cast< Socket* >( completionKey );
-            Socket::EventHandlerSendTo ( sock_t , pOvlpEx , bytesTransferred );
-         }
-         break;
-         case OverlappedEx::SendFile:
-         {
-            auto sock_t = reinterpret_cast< Socket* >( completionKey );
-            Socket::EventHandlerSendFile ( sock_t , pOvlpEx , bytesTransferred );
-         }
-         break;
-         case OverlappedEx::ReadDirChanges:
-         {
-            auto dir = reinterpret_cast< Directory* >( completionKey );
-            DWORD offset = 0;
-            while ( offset < bytesTransferred )
-            {
-               auto pNotify = reinterpret_cast< PFILE_NOTIFY_INFORMATION >( pOvlpEx->Buffer + offset );
-               offset += pNotify->NextEntryOffset;
-               Directory::Change change;
-               change.m_Filename.resize ( pNotify->FileNameLength / 2 );
-               wcsncpy ( const_cast< wchar_t* >( change.m_Filename.data ( ) ) , pNotify->FileName , pNotify->FileNameLength / 2 );
-               change.m_Action = pNotify->Action;
-               change.m_pDir = dir;
-               if ( dir->OnChange )
+       try
+       {
+           auto status = GetQueuedCompletionStatus ( &bytesTransferred , &completionKey , &pOverlapped , INFINITE );
+           if ( !completionKey && !pOverlapped )
+           {
+               PostQueuedCompletionStatus ( NULL , NULL , NULL ); // unblock all threads
+               break;
+           }
+           auto pOvlpEx = ( OverlappedEx * ) pOverlapped;
+           if ( pOvlpEx )
+           {
+               if ( status.first )
                {
-                  dir->OnChange ( change );
+                   switch ( pOvlpEx->Operation )
+                   {
+                       case OverlappedEx::RecvFrom:
+                       {
+                           auto sock_t = reinterpret_cast< std::shared_ptr<UDPASocket>* >( completionKey );
+                           UDPASocket::EventHandlerRecvFrom ( *sock_t , pOvlpEx , bytesTransferred , status.second );
+                       }
+                       break;
+                       case OverlappedEx::SendTo:
+                       {
+                           auto sock_t = reinterpret_cast< std::shared_ptr<UDPASocket>* >( completionKey );
+                           UDPASocket::EventHandlerSendTo ( *sock_t , pOvlpEx , bytesTransferred , status.second );
+                       }
+                       break;
+                       case OverlappedEx::Req_SendTo:
+                       {
+                           auto sock_t = reinterpret_cast< std::shared_ptr<UDPASocket>* >( completionKey );
+                           UDPASocket::EventHandlerRequestSendTo ( *sock_t , pOvlpEx , bytesTransferred , status.second );
+                       }
+                       break;
+                       case OverlappedEx::Req_RecvFrom:
+                       {
+                           auto sock_t = reinterpret_cast< std::shared_ptr<UDPASocket>* >( completionKey );
+                           UDPASocket::EventHandlerRequestRecvFrom ( *sock_t , pOvlpEx , bytesTransferred , status.second );
+                       }
+                       break;
+                       default:
+                           break;
+                   }
                }
-               if ( pNotify->NextEntryOffset == 0 )
+               else
                {
-                  break;
+                   switch ( pOvlpEx->Operation )
+                   {
+                       case OverlappedEx::Req_SendTo:
+                       case OverlappedEx::Req_RecvFrom:
+                       case OverlappedEx::SendTo:
+                       case OverlappedEx::RecvFrom:
+                       {
+                           auto sock_t = reinterpret_cast< std::shared_ptr<UDPASocket>* >( completionKey );
+                           UDPASocket::EventHandlerClose ( *sock_t , pOvlpEx , bytesTransferred , status.second );
+                       }
+                       break;
+                       default:
+                           break;
+                   }
                }
-            }
-            pOvlpEx->reset ( );
-            pOvlpEx->Operation = OverlappedEx::ReadDirChanges;
-            pOvlpEx->Device = dir->Handle ( );
-            pOvlpEx->Flags = dir->Flags ( );
-            dir->CheckChanges ( pOvlpEx );
-         }
-         break;
-         case OverlappedEx::Req_Ioctl:
-         {
-         }
-         break;
-         case OverlappedEx::Req_AcceptEx:
-         {
-         }
-         break;
-         case OverlappedEx::Req_ConnectEx:
-         {
-         }
-         break;
-         case OverlappedEx::Req_DisconnectEx:
-         {
-         }
-         break;
-         case OverlappedEx::Req_LockEx:
-         {
-         }
-         break;
-         case OverlappedEx::Req_Read:
-         {
-         }
-         break;
-         case OverlappedEx::Req_Write:
-         {
-         }
-         break;
-         case OverlappedEx::Req_ReadDirChanges:
-         {
-            pOvlpEx->Operation = OverlappedEx::ReadDirChanges;
-            auto dir = reinterpret_cast< Directory* >( completionKey );
-            auto result = dir->CheckChanges ( pOvlpEx );
-            if ( !result.first )
-            {
-               pOvlpEx->reset ( );
-               Free ( pOvlpEx );
-            }
-         }
-         break;
-         case OverlappedEx::Req_Recv:
-         {
-         }
-         break;
-         case OverlappedEx::Req_RecvFrom:
-         {
-         }
-         break;
-         case OverlappedEx::Req_Send:
-         {
-         }
-         break;
-         case OverlappedEx::Req_SendTo:
-         {
-         }
-         break;
-         case OverlappedEx::Req_SendFile:
-         {
-         }
-         break;
-         }
-      }
-      else
-      {
-         Free ( pOvlpEx );
-      }
+           }
+           else
+           {
+               if ( status.first == 0 )
+               {
+                   
+             }
+           }
+       }
+       catch ( std::system_error& err )
+       {
+           std::cout << "Caught system error : " << err.what ( ) << " System Error Code : " << err.code ( ) << std::endl;
+       }
+       catch ( std::runtime_error& err )
+       {
+           std::cout << "Caught runtime error : " << err.what ( ) << std::endl;
+       }
+       catch ( ... )
+       {
+           std::cout << "Caught unknown error\n";
+       }
    }
 }
 ThreadPool& ThreadPool::Instance ( )
@@ -189,16 +100,23 @@ ThreadPool& ThreadPool::Instance ( )
    static ThreadPool g_obj;
    return g_obj;
 }
-ThreadPool::ThreadPool ( )
+ThreadPool::ThreadPool ( ) : CompletionPort ( )
 {
-   for ( size_t i = 0; i < std::thread::hardware_concurrency ( ); ++i )
-   {
-      m_pthreads.emplace_back ( std::make_unique<std::thread> ( &ThreadPool::Execute , this ) );
-   }
+    for ( size_t i = 0; i < std::thread::hardware_concurrency ( ); ++i )
+    {
+        m_pthreads.push_back ( std::make_unique<std::thread> ( &ThreadPool::Execute , this ) );
+    }
 }
 ThreadPool::~ThreadPool ( )
 {
-   this->PostQueuedCompletionStatus ( NULL , NULL , NULL );
+   PostQueuedCompletionStatus ( NULL , NULL , NULL );
+   for ( auto&i : m_pthreads )
+   {
+       if ( i->joinable ( ) )
+       {
+           i->join ( );
+       }
+   }
 }
 OverlappedEx* ThreadPool::Allocate ( )
 {

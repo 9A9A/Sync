@@ -53,7 +53,6 @@ public:
             delete m_pool.top ( );
             m_pool.pop ( );
         }
-        system ( "pause" );
     }
     void Free ( ObjectType* obj )
     {
