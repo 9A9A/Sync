@@ -5,6 +5,7 @@
 #include <Ws2ipdef.h>
 #include <Windows.h>
 #include <iostream>
+#include <string>
 union net_sockaddr
 {
    sockaddr addr;

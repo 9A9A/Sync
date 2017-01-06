@@ -583,6 +583,19 @@ void UDPASocket::RegisterOnSend ( const EventSend& callback )
     }
 }
 
+std::string UDPASocket::GetId ( ) const
+{
+    static const std::string udp ( "UDP : " );
+    if ( m_hSocket != INVALID_SOCKET )
+    {
+        return udp + std::to_string ( ( unsigned int ) m_hSocket );
+    }
+    else
+    {
+        return udp + "Invalid handle";
+    }
+}
+
 void UDPASocket::UnregisterAllCallbacks ( )
 {
     std::lock_guard<std::recursive_mutex> lock ( m_Locker );
@@ -605,11 +618,11 @@ void UDPASocket::RegisterOnCompletionPort ( CompletionPort& port )
         }
     }
 }
-void UDPASocket::EventHandlerRecvFrom ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode )
+void UDPASocket::EventHandlerRecvFrom ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
     std::lock_guard<std::recursive_mutex> lock ( socket->m_Locker );
-    socket->m_nBtRcv += bytesTranseferred;
-    ev->Flags = bytesTranseferred;
+    socket->m_nBtRcv += bytesTransferred;
+    ev->Flags = bytesTransferred;
     if ( ev->SequenceNum - socket->m_nRcvSeqCompleted > 1 )
     {
         socket->m_RrdQueue [ ev->SequenceNum ] = ev;
@@ -618,7 +631,7 @@ void UDPASocket::EventHandlerRecvFrom ( std::shared_ptr<UDPASocket>& socket , Ov
     {
         if ( socket->OnRecv )
         {
-            socket->OnRecv ( *socket , &ev->NetAddr , ev->Buffer , bytesTranseferred );
+            socket->OnRecv ( *socket , &ev->NetAddr , ev->Buffer , bytesTransferred );
         }
         socket->m_nRcvSeqCompleted++;
         ev->reset ( );
@@ -648,19 +661,19 @@ void UDPASocket::EventHandlerRecvFrom ( std::shared_ptr<UDPASocket>& socket , Ov
     }
 }
 
-void UDPASocket::EventHandlerSendTo ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode )
+void UDPASocket::EventHandlerSendTo ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
     std::lock_guard<std::recursive_mutex> lock ( socket->m_Locker );
-    socket->m_nBtSnt += bytesTranseferred;
+    socket->m_nBtSnt += bytesTransferred;
     if ( socket->OnSend )
     {
-        socket->OnSend ( *socket , &ev->NetAddr , bytesTranseferred );
+        socket->OnSend ( *socket , &ev->NetAddr , bytesTransferred );
     }
     ThreadPool::Instance ( ).Free ( ev );
     socket->m_nPendingOperations--;
 }
 
-void UDPASocket::EventHandlerRequestRecvFrom ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode )
+void UDPASocket::EventHandlerRequestRecvFrom ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
     std::lock_guard<std::recursive_mutex> lock ( socket->m_Locker );
     ev->Operation = OverlappedEx::RecvFrom;
@@ -671,7 +684,7 @@ void UDPASocket::EventHandlerRequestRecvFrom ( std::shared_ptr<UDPASocket>& sock
     auto result = socket->RecvFrom ( ev , &buf , 1 );
 }
 
-void UDPASocket::EventHandlerRequestSendTo ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode )
+void UDPASocket::EventHandlerRequestSendTo ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
     std::lock_guard<std::recursive_mutex> lock ( socket->m_Locker );
     ev->Operation = OverlappedEx::SendTo;
@@ -680,8 +693,27 @@ void UDPASocket::EventHandlerRequestSendTo ( std::shared_ptr<UDPASocket>& socket
     buf.len = ev->BufferHolder.len;
     auto result = socket->SendTo ( ev , &buf , 1 );
 }
-
-void UDPASocket::EventHandlerClose ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode )
+void UDPASocket::Close ( )
+{
+    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
+    if ( m_hSocket != INVALID_SOCKET )
+    {
+        if ( closesocket ( m_hSocket ) == SOCKET_ERROR )
+        {
+            SYSTEM_ERROR ( "Error during closing socket" );
+        }
+        else
+        {
+            m_hSocket = INVALID_SOCKET;
+            if ( !m_nPendingOperations && m_pCompletionKey )
+            {
+                delete m_pCompletionKey;
+                m_pCompletionKey = nullptr;
+            }
+        }
+    }
+}
+void UDPASocket::EventHandlerClose ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
     std::unique_lock<std::recursive_mutex> lock ( socket->m_Locker );
     if ( socket->IsValid ( ) )
@@ -729,6 +761,24 @@ std::shared_ptr<TCPASocket> TCPASocket::Create ( )
 }
 
 void TCPASocket::Listen ( )
+{
+
+}
+
+std::string TCPASocket::GetId ( ) const
+{
+    static const std::string udp ( "TCP : " );
+    if ( m_hSocket != INVALID_SOCKET )
+    {
+        return udp + std::to_string ( ( unsigned int ) m_hSocket );
+    }
+    else
+    {
+        return udp + "Invalid handle";
+    }
+}
+
+void TCPASocket::Close ( )
 {
 
 }
@@ -804,21 +854,7 @@ void NetworkSocket::Bind ( unsigned short int port )
     }
 }
 
-void NetworkSocket::Close ( )
-{
-    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-    if ( m_hSocket != INVALID_SOCKET )
-    {
-        if ( closesocket ( m_hSocket ) == SOCKET_ERROR )
-        {
-            SYSTEM_ERROR ( "Error during closing socket" );
-        }
-        else
-        {
-            m_hSocket = INVALID_SOCKET;
-        }
-    }
-}
+
 
 void NetworkSocket::InheritCallbacks ( NetworkSocket* )
 {

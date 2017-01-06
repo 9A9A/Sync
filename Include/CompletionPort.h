@@ -57,6 +57,10 @@ public:
         m_nPendingOperations ( 0 )
     {
     }
+    size_t PendingOperations ( )const
+    {
+        return m_nPendingOperations;
+    }
     virtual void RegisterOnCompletionPort ( CompletionPort& ) = 0;
 };
 #endif

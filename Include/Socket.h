@@ -39,13 +39,14 @@ public:
         std::lock_guard<std::recursive_mutex> lock ( m_Locker );
         return m_nBtRcv;
     }
+    virtual std::string GetId ( )const = 0;
     bool IsValid ( )const
     {
         std::lock_guard<std::recursive_mutex> lock ( m_Locker );
         return ( m_hSocket != INVALID_SOCKET ) ? true : false;
     }
     void Bind ( unsigned short int port );
-    void Close ( );
+    virtual void Close ( ) = 0;
 
     virtual void InheritCallbacks ( NetworkSocket* );
     using EventIoctl = std::function<void ( NetworkSocket* )>;
@@ -95,6 +96,9 @@ public:
     void RegisterOnRecv ( const EventRecv& );
     void RegisterOnSend ( const EventSend& );
 
+    virtual std::string GetId ( )const;
+
+    virtual void Close ( );
     void UnregisterAllCallbacks ( );
 
     virtual void RegisterOnCompletionPort ( CompletionPort& );
@@ -131,6 +135,21 @@ public:
     using EventSend = std::function<void ( TCPASocket& , size_t )>;
 
     void Listen ( );
+    void RequestAccept ( );
+    void RequestConnect ( );
+    void RequestDisconnect ( );
+    void RequestRecv ( );
+    void RequestSend ( );
+
+    virtual std::string GetId ( )const;
+    virtual void Close ( );
+
+    std::pair<int , DWORD> Accept ( );
+    std::pair<int , DWORD> Connect ( );
+    std::pair<int , DWORD> Disconnect ( );
+    std::pair<int , DWORD> Recv ( );
+    std::pair<int , DWORD> Send ( );
+
 
     void RegisterOnAccept ( const EventAccept& );
     void RegisterOnConnect ( const EventConnect& );
@@ -146,6 +165,56 @@ public:
     static void EventHandlerDisconnect ( std::shared_ptr<TCPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode );
     static void EventHandlerRecv ( std::shared_ptr<TCPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode );
     static void EventHandlerSend ( std::shared_ptr<TCPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode );
+};
+template<typename _Socket> class Socket
+{
+    std::shared_ptr<_Socket> m_Socket;
+public:
+    Socket ( )
+    {
+        m_Socket = _Socket::Create ( );
+    }
+    explicit Socket ( std::shared_ptr<_Socket>& sock ) : m_Socket ( sock )
+    {
+    }
+    Socket ( const Socket<_Socket>& _OthSock ) : m_Socket ( _OthSock )
+    {
+    }
+    Socket ( Socket<_Socket>&& _OthSock )
+    {
+        m_Socket = std::move ( _OthSock.m_Socket );
+    }
+    Socket<_Socket>& operator = ( const Socket<_Socket>& _OthSock )
+    {
+        if ( this != &_OthSock )
+        {
+            if ( m_Socket.use_count ( ) == 2 )
+            {
+                m_Socket->Close ( );
+            }
+            m_Socket = _OthSock.m_Socket;
+        }
+        return *this;
+    }
+    Socket<_Socket>& operator=( Socket<_Socket>&& _OthSock )
+    {
+        if ( this != &_OthSock )
+        {
+            m_Socket = std::move ( _OthSock.m_Socket );
+        }
+        return *this;
+    }
+    virtual ~Socket ( )
+    {
+        if ( m_Socket.use_count ( ) == 2 )
+        {
+            m_Socket->Close ( );
+        }
+    }
+    const std::shared_ptr<_Socket>& operator()( )
+    {
+        return m_Socket;
+    }
 };
 class NetworkingInitialization
 {

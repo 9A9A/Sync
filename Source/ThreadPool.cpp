@@ -94,6 +94,7 @@ void ThreadPool::Execute ( )
            std::cout << "Caught unknown error\n";
        }
    }
+   std::cout << "Thread exit\n";
 }
 ThreadPool& ThreadPool::Instance ( )
 {

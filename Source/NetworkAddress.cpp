@@ -141,7 +141,17 @@ bool NetworkAddress::IsSameIpAndPort ( NetworkAddress& ) const
 
 std::string NetworkAddress::ToString ( ) const
 {
-   return std::string ( );
+    if ( m_address.addr.sa_family == AF_INET )
+    {
+        return std::to_string ( ( int ) m_address.addr4.sin_addr.S_un.S_un_b.s_b1 ) + "." +
+            std::to_string ( ( int ) m_address.addr4.sin_addr.S_un.S_un_b.s_b2 ) + "." +
+            std::to_string ( ( int ) m_address.addr4.sin_addr.S_un.S_un_b.s_b3 ) + "." +
+            std::to_string ( ( int ) m_address.addr4.sin_addr.S_un.S_un_b.s_b4 );
+    }
+    else
+    {
+        return std::string ( );
+    }
 }
 
 bool NetworkAddress::GetLocalHost ( uint16_t InetFamily , NetworkAddress* pAddr )
