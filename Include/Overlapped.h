@@ -3,9 +3,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include "NetworkAddress.h"
-#define DEFAULT_BUFFER_SIZE 32768
+#define DEFAULT_BUFFER_SIZE 0xFFFF
 #ifdef _WIN64
-#define OVERLAPPED_MAX_ENTRIES 32767
+#define OVERLAPPED_MAX_ENTRIES 0x7FFF
 #else
 #define OVERLAPPED_MAX_ENTRIES 2500
 #endif

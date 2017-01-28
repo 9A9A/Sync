@@ -3,7 +3,7 @@
 #include <mutex>
 #include <stack>
 #include <vector>
-template<typename ObjectType>
+template<typename ObjectType,size_t PoolSize>
 class SimpleObjectPool
 {
     std::mutex m_lock;
@@ -14,7 +14,14 @@ public:
         std::lock_guard<std::mutex> locker ( m_lock );
         if ( obj )
         {
-            m_pool.push ( obj );
+            if ( m_pool.size ( ) < PoolSize )
+            {
+                m_pool.push ( obj );
+            }
+            else
+            {
+                delete obj;
+            }
         }
     }
     ObjectType* Alloc ( )

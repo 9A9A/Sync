@@ -8,417 +8,6 @@ LPFN_DISCONNECTEX NetworkingInitialization::_DisconnectEx = nullptr;
 LPFN_GETACCEPTEXSOCKADDRS NetworkingInitialization::_GetAcceptExSockaddrs = nullptr;
 LPFN_TRANSMITFILE NetworkingInitialization::_TransmitFile = nullptr;
 LPFN_TRANSMITPACKETS NetworkingInitialization::_TransmitPackets = nullptr;
-
-//Socket::Socket ( SockType type , IPType ip ) :
-//    m_nBytesSent ( 0 ) ,
-//    m_nBytesRecv ( 0 ) ,
-//    m_nPostedSeqNum ( 0 ) ,
-//    m_nCompletedSeqNum ( 0 ) ,
-//    m_SockType ( type ) ,
-//    m_IPType ( ip )
-//{
-//    NetworkingInitialization::Instance ( );
-//    m_hSocket = InitializeSocket ( m_SockType , m_IPType );
-//    if ( m_hSocket == INVALID_SOCKET )
-//    {
-//        SYSTEM_ERROR ( "Can't create socket" );
-//    }
-//}
-//
-//Socket::Socket ( SockType type , SOCKET sock , IPType ip ) :
-//    m_nBytesSent ( 0 ) ,
-//    m_nBytesRecv ( 0 ) ,
-//    m_nPostedSeqNum ( 0 ) ,
-//    m_nCompletedSeqNum ( 0 ) ,
-//    m_hSocket ( sock ) ,
-//    m_SockType ( type ) ,
-//    m_IPType ( ip )
-//{
-//    if ( m_hSocket == INVALID_SOCKET )
-//    {
-//        SYSTEM_ERROR ( "Can't create socket" );
-//    }
-//}
-//
-//Socket::~Socket ( )
-//{
-//    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-//    Close ( );
-//}
-//
-//SOCKET Socket::Handle ( ) const
-//{
-//    return m_hSocket;
-//}
-//
-//Socket::SockType Socket::SocketType ( ) const
-//{
-//    return m_SockType;
-//}
-//
-//Socket::IPType Socket::IPFamily ( ) const
-//{
-//    return m_IPType;
-//}
-//
-//size_t Socket::BytesSent ( ) const
-//{
-//    return m_nBytesSent;
-//}
-//
-//size_t Socket::BytesReceived ( ) const
-//{
-//    return m_nBytesRecv;
-//}
-//
-//void Socket::RegisterOnCompletionPort ( CompletionPort* port )
-//{
-//    if ( port )
-//    {
-//        port->RegisterHandle ( ( HANDLE ) m_hSocket , ( ULONG_PTR )this );
-//    }
-//}
-//
-//void Socket::Close ( )
-//{
-//    ::closesocket ( m_hSocket );
-//}
-//
-//void Socket::Bind ( )
-//{
-//
-//
-//}
-//
-//void Socket::Bind ( USHORT port )
-//{
-//    NetworkAddress addr ( 0 , port );
-//    auto status = NetworkAddress::GetLocalHost ( m_IPType , &addr );
-//    addr.Set_Port ( port );
-//    if ( ::bind ( m_hSocket , addr.GetSockAddr ( ) , addr.GetSockAddrLen ( ) ) )
-//    {
-//        SYSTEM_ERROR ( "Can't bind the socket" );
-//    }
-//}
-//
-//void Socket::Listen ( )
-//{
-//    if ( ::listen ( m_hSocket , SOMAXCONN ) == SOCKET_ERROR )
-//    {
-//        SYSTEM_ERROR ( "Can't listen the socket" );
-//    }
-//}
-//
-//std::pair<int , DWORD> Socket::Accept ( OverlappedEx* ov )
-//{
-//
-//}
-//
-//std::pair<int , DWORD> Socket::Connect ( OverlappedEx* ov , sockaddr* addr )
-//{
-//
-//}
-//
-//std::pair<int , DWORD> Socket::Disconnect ( OverlappedEx* ov )
-//{
-//
-//}
-//
-//std::pair<int , DWORD> Socket::Ioctl ( OverlappedEx* ov )
-//{
-//
-//}
-//
-//std::pair<int , DWORD> Socket::RecvFrom ( OverlappedEx* ov , LPWSABUF bufs , DWORD count )
-//{
-//
-//}
-//
-//std::pair<int , DWORD> Socket::Recv ( OverlappedEx* ov , LPWSABUF bufs , DWORD count )
-//{
-//
-//}
-//
-//std::pair<int , DWORD> Socket::Send ( OverlappedEx* ov , LPWSABUF bufs , DWORD count )
-//{
-//
-//}
-//
-//std::pair<int , DWORD> Socket::SendTo ( OverlappedEx* ov , LPWSABUF bufs , DWORD count )
-//{
-//
-//}
-//
-//std::pair<int , DWORD> Socket::SendFile ( OverlappedEx* ov )
-//{
-//
-//}
-//
-//void Socket::RequestAccept ( CompletionPort* port , OverlappedEx* ov /*= nullptr */ )
-//{
-//    if ( port )
-//    {
-//        ov = ( !ov ) ? ThreadPool::Instance ( ).Allocate ( ) : ov;
-//        ov->reset ( );
-//        ov->Operation = OverlappedEx::Req_AcceptEx;
-//        ov->Socket = InitializeSocket ( m_SockType , m_IPType );
-//        port->PostQueuedCompletionStatus ( NULL , ( ULONG_PTR )this , ( LPOVERLAPPED ) ov );
-//    }
-//}
-//
-//void Socket::RequestConnect ( CompletionPort* port , sockaddr* addr , OverlappedEx* ov /*= nullptr */ )
-//{
-//    if ( port )
-//    {
-//        ov = ( !ov ) ? ThreadPool::Instance ( ).Allocate ( ) : ov;
-//        ov->reset ( );
-//        ov->Operation = OverlappedEx::Req_ConnectEx;
-//        port->PostQueuedCompletionStatus ( NULL , ( ULONG_PTR )this , ( LPOVERLAPPED ) ov );
-//    }
-//}
-//
-//void Socket::RequestDisconnect ( CompletionPort* port , OverlappedEx* ov /*= nullptr */ )
-//{
-//    if ( port )
-//    {
-//        ov = ( !ov ) ? ThreadPool::Instance ( ).Allocate ( ) : ov;
-//        ov->reset ( );
-//        ov->Operation = OverlappedEx::Req_DisconnectEx;
-//        port->PostQueuedCompletionStatus ( NULL , ( ULONG_PTR )this , ( LPOVERLAPPED ) ov );
-//    }
-//}
-//
-//void Socket::RequestIoctl ( CompletionPort* port , OverlappedEx* ov /*= nullptr */ )
-//{
-//    if ( port )
-//    {
-//
-//    }
-//}
-//
-//void Socket::RequestRecv ( CompletionPort* port , OverlappedEx* ov /*= nullptr */ )
-//{
-//    if ( port )
-//    {
-//        ov = ( !ov ) ? ThreadPool::Instance ( ).Allocate ( ) : ov;
-//        ov->reset;
-//        ov->Operation = OverlappedEx::Req_Recv;
-//        port->PostQueuedCompletionStatus ( NULL , ( ULONG_PTR )this , ( LPOVERLAPPED ) ov );
-//    }
-//}
-//
-//void Socket::RequestRecvFrom ( CompletionPort* port , OverlappedEx* ov /*= nullptr */ )
-//{
-//    if ( port )
-//    {
-//        ov = ( !ov ) ? ThreadPool::Instance ( ).Allocate ( ) : ov;
-//        ov->reset;
-//        ov->Operation = OverlappedEx::Req_RecvFrom;
-//        port->PostQueuedCompletionStatus ( NULL , ( ULONG_PTR )this , ( LPOVERLAPPED ) ov );
-//    }
-//}
-//
-//void Socket::RequestSend ( CompletionPort* port , char* pbuffer , unsigned int buf_len , OverlappedEx* ov )
-//{
-//    if ( port && pbuffer && buf_len )
-//    {
-//        ov = ( !ov ) ? ThreadPool::Instance ( ).Allocate ( ) : ov;
-//        ov->reset ( );
-//        ov->Operation = OverlappedEx::Req_Send;
-//        ov->BufferHolder.buf = pbuffer;
-//        ov->BufferHolder.len = buf_len;
-//        port->PostQueuedCompletionStatus ( NULL , ( ULONG_PTR )this , ( LPOVERLAPPED ) ov );
-//    }
-//}
-//
-//void Socket::RequestSendFile ( CompletionPort* port,  OverlappedEx* ov /*= nullptr */ )
-//{
-//    if ( port )
-//    {
-//        ov = ( !ov ) ? ThreadPool::Instance ( ).Allocate ( ) : ov;
-//        ov->reset ( );
-//        ov->Operation = OverlappedEx::Req_SendFile;
-//        //... insert code here
-//        port->PostQueuedCompletionStatus ( NULL , ( ULONG_PTR )this , ( LPOVERLAPPED ) ov );
-//    }
-//}
-//
-//void Socket::RequestSendTo ( CompletionPort* port , char* pbuffer , unsigned int buf_len , NetworkAddress& addr , OverlappedEx* ov /*= nullptr */ )
-//{
-//    if ( port )
-//    {
-//        ov = ( !ov ) ? ThreadPool::Instance ( ).Allocate ( ) : ov;
-//        ov->reset ( );
-//        ov->Operation = OverlappedEx::Req_SendTo;
-//        ov->NetAddr = addr;
-//        ov->BufferHolder.buf = pbuffer;
-//        ov->BufferHolder.len = buf_len;
-//        port->PostQueuedCompletionStatus ( NULL , ( ULONG_PTR )this , ( LPOVERLAPPED ) ov );
-//    }
-//}
-//
-//void Socket::RegisterOnAccept ( const EventAccept& cb )
-//{
-//    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-//    if ( cb )
-//    {
-//        OnAccept = cb;
-//    }
-//}
-//
-//void Socket::RegisterOnConnect ( const EventConnect& cb )
-//{
-//    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-//    if ( cb )
-//    {
-//        OnConnect = cb;
-//    }
-//}
-//
-//void Socket::RegisterOnDisconnect ( const EventDisconnect& cb )
-//{
-//    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-//    if ( cb )
-//    {
-//        OnDisconnect = cb;
-//    }
-//}
-//
-//void Socket::RegisterOnIoctl ( const EventIoctl& cb )
-//{
-//    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-//    if ( cb )
-//    {
-//        OnIoctl = cb;
-//    }
-//}
-//
-//void Socket::RegisterOnRecv ( const EventRecv& cb )
-//{
-//    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-//    if ( cb )
-//    {
-//        OnRecv = cb;
-//    }
-//}
-//
-//void Socket::RegisterOnRecvFrom ( const EventRecvFrom& cb )
-//{
-//    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-//    if ( cb )
-//    {
-//        OnRecvFrom = cb;
-//    }
-//}
-//
-//void Socket::RegisterOnSend ( const EventSend& cb )
-//{
-//    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-//    if ( cb )
-//    {
-//        OnSend = cb;
-//    }
-//}
-//
-//void Socket::RegisterOnSendTo ( const EventSendTo& cb )
-//{
-//    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-//    if ( cb )
-//    {
-//        OnSendTo = cb;
-//    }
-//}
-//
-//void Socket::InheritCallbacks ( Socket* sock )
-//{
-//    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-//    if ( sock )
-//    {
-//        OnAccept = sock->OnAccept;
-//        OnConnect = sock->OnConnect;
-//        OnDisconnect = sock->OnDisconnect;
-//        OnError = sock->OnError;
-//        OnIoctl = sock->OnIoctl;
-//        OnRecv = sock->OnRecv;
-//        OnRecvFrom = sock->OnRecvFrom;
-//        OnSend = sock->OnSend;
-//        OnSendTo = sock->OnSendTo;
-//    }
-//}
-//
-//void Socket::UnregisterAll ( )
-//{
-//    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-//    OnAccept = nullptr;
-//    OnConnect = nullptr;
-//    OnDisconnect = nullptr;
-//    OnError = nullptr;
-//    OnIoctl = nullptr;
-//    OnRecv = nullptr;
-//    OnRecvFrom = nullptr;
-//    OnSend = nullptr;
-//    OnSendTo = nullptr;
-//}
-//
-//SOCKET Socket::InitializeSocket ( SockType type , IPType ip )
-//{
-//    SOCKET sock_t = INVALID_SOCKET;
-//    switch ( type )
-//    {
-//        case TCP:
-//            sock_t = ::WSASocketW ( ip , type , IPPROTO_TCP , NULL , NULL , WSA_FLAG_OVERLAPPED );
-//            break;
-//        case UDP:
-//            sock_t = ::WSASocketW ( ip , type , IPPROTO_UDP , NULL , NULL , WSA_FLAG_OVERLAPPED );
-//            break;
-//    }
-//    return sock_t;
-//}
-//
-//void Socket::EventHandlerAccept ( Socket* , OverlappedEx* , DWORD bytes )
-//{
-//
-//}
-//
-//void Socket::EventHandlerConnect ( Socket* , OverlappedEx* , DWORD bytes )
-//{
-//
-//}
-//
-//void Socket::EventHandlerDisconnect ( Socket* , OverlappedEx* , DWORD bytes )
-//{
-//
-//}
-//
-//void Socket::EventHandlerIoctl ( Socket* , OverlappedEx* , DWORD bytes )
-//{
-//
-//}
-//
-//void Socket::EventHandlerRecv ( Socket* , OverlappedEx* , DWORD bytes )
-//{
-//
-//}
-//
-//void Socket::EventHandlerRecvFrom ( Socket* , OverlappedEx* , DWORD bytes )
-//{
-//
-//}
-//
-//void Socket::EventHandlerSend ( Socket* , OverlappedEx* , DWORD bytes )
-//{
-//
-//}
-//
-//void Socket::EventHandlerSendFile ( Socket* , OverlappedEx* , DWORD bytes )
-//{
-//
-//}
-//
-//void Socket::EventHandlerSendTo ( Socket* , OverlappedEx* , DWORD bytes )
-//{
-//
-//}
 NetworkingInitialization::NetworkingInitialization ( ) :
     m_AcceptEx ( WSAID_ACCEPTEX ) ,
     m_ConnectEx ( WSAID_CONNECTEX ) ,
@@ -438,7 +27,7 @@ NetworkingInitialization::NetworkingInitialization ( ) :
     if ( ::WSAIoctl ( socket_t , SIO_GET_EXTENSION_FUNCTION_POINTER , &m_AcceptEx , sizeof ( m_AcceptEx ) , &_AcceptEx , sizeof ( _AcceptEx ) , &bytes_t , NULL , NULL ) == SOCKET_ERROR ||
          ::WSAIoctl ( socket_t , SIO_GET_EXTENSION_FUNCTION_POINTER , &m_ConnectEx , sizeof ( m_ConnectEx ) , &_ConnectEx , sizeof ( _ConnectEx ) , &bytes_t , NULL , NULL ) == SOCKET_ERROR ||
          ::WSAIoctl ( socket_t , SIO_GET_EXTENSION_FUNCTION_POINTER , &m_DisconnectEx , sizeof ( m_DisconnectEx ) , &_DisconnectEx , sizeof ( _DisconnectEx ) , &bytes_t , NULL , NULL ) == SOCKET_ERROR ||
-         ::WSAIoctl ( socket_t , SIO_GET_EXTENSION_FUNCTION_POINTER , &m_GetAcceptExSockaddrs , sizeof ( m_GetAcceptExSockaddrs ) , &_GetAcceptExSockaddrs , sizeof (_GetAcceptExSockaddrs ) , &bytes_t , NULL , NULL ) == SOCKET_ERROR ||
+         ::WSAIoctl ( socket_t , SIO_GET_EXTENSION_FUNCTION_POINTER , &m_GetAcceptExSockaddrs , sizeof ( m_GetAcceptExSockaddrs ) , &_GetAcceptExSockaddrs , sizeof ( _GetAcceptExSockaddrs ) , &bytes_t , NULL , NULL ) == SOCKET_ERROR ||
          ::WSAIoctl ( socket_t , SIO_GET_EXTENSION_FUNCTION_POINTER , &m_TransmitFile , sizeof ( m_TransmitFile ) , &_TransmitFile , sizeof ( _TransmitFile ) , &bytes_t , NULL , NULL ) == SOCKET_ERROR ||
          ::WSAIoctl ( socket_t , SIO_GET_EXTENSION_FUNCTION_POINTER , &m_TransmitPackets , sizeof ( m_TransmitPackets ) , &_TransmitPackets , sizeof ( _TransmitPackets ) , &bytes_t , NULL , NULL ) == SOCKET_ERROR )
     {
@@ -458,20 +47,19 @@ NetworkingInitialization& NetworkingInitialization::Instance ( )
     return g_obj;
 }
 
-UDPASocket::~UDPASocket ( )
+UDPSocketHT::~UDPSocketHT ( )
 {
     Close ( );
     std::cout << "UDPASocket class destroyed\n";
 }
 
-std::shared_ptr<UDPASocket> UDPASocket::Create ( )
+std::shared_ptr<UDPSocketHT> UDPSocketHT::Create ( )
 {
-    return std::make_shared<UDPASocket> ( );
+    return std::make_shared<UDPSocketHT> ( );
 }
 
-std::pair<int , DWORD> UDPASocket::RecvFrom ( OverlappedEx* ev , LPWSABUF bufs , DWORD count )
+STATUS UDPSocketHT::RecvFrom ( OverlappedEx* ev , LPWSABUF bufs , DWORD count )
 {
-    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
     if ( !ev && !IsValid ( ) )
     {
         throw std::runtime_error ( "Pointer to overlapped struct is nullptr or handle isn't valid" );
@@ -494,13 +82,12 @@ std::pair<int , DWORD> UDPASocket::RecvFrom ( OverlappedEx* ev , LPWSABUF bufs ,
                 SYSTEM_ERROR ( "Can't execute RecvFrom on this socket" );
             }
         }
-        return std::pair<int , DWORD> ( res , ::GetLastError ( ) );
+        return STATUS ( res , ::GetLastError ( ) );
     }
 }
 
-std::pair<int , DWORD> UDPASocket::SendTo ( OverlappedEx* ev , LPWSABUF bufs , DWORD count )
+STATUS UDPSocketHT::SendTo ( OverlappedEx* ev , LPWSABUF bufs , DWORD count )
 {
-    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
     if ( !ev && !IsValid ( ) )
     {
         throw std::runtime_error ( "Pointer to overlapped struct is nullptr or handle isn't valid" );
@@ -520,11 +107,11 @@ std::pair<int , DWORD> UDPASocket::SendTo ( OverlappedEx* ev , LPWSABUF bufs , D
                 SYSTEM_ERROR ( "Can't execute SendTo on this socket" );
             }
         }
-        return std::pair<int , DWORD> ( res , ::GetLastError ( ) );
+        return STATUS ( res , ::GetLastError ( ) );
     }
 }
 
-void UDPASocket::RequestRecvFrom ( CompletionPort& port , OverlappedEx* ev /*= nullptr */ )
+void UDPSocketHT::RequestRecvFrom ( CompletionPort& port , OverlappedEx* ev /*= nullptr */ )
 {
     if ( m_pCompletionKey )
     {
@@ -538,7 +125,7 @@ void UDPASocket::RequestRecvFrom ( CompletionPort& port , OverlappedEx* ev /*= n
         throw std::runtime_error ( "Not registered on completion port" );
     }
 }
-void UDPASocket::RequestSendTo ( CompletionPort& port , char* pbuffer , unsigned int buf_len , NetworkAddress& addr , OverlappedEx* ev /*= nullptr */ )
+void UDPSocketHT::RequestSendTo ( CompletionPort& port , char* pbuffer , unsigned int buf_len , NetworkAddress& addr , OverlappedEx* ev /*= nullptr */ )
 {
     if ( m_pCompletionKey )
     {
@@ -556,34 +143,25 @@ void UDPASocket::RequestSendTo ( CompletionPort& port , char* pbuffer , unsigned
     }
 }
 
-void UDPASocket::RegisterOnClose ( const EventClose& callback )
+void UDPSocketHT::RegisterCallback ( const EventClose& callback )
 {
     std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-    if ( callback )
-    {
-        OnClose = callback;
-    }
+    OnClose = ( callback ) ? callback : OnClose;
 }
 
-void UDPASocket::RegisterOnRecv ( const EventRecv& callback )
+void UDPSocketHT::RegisterCallback ( const EventRecv& callback )
 {
     std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-    if ( callback )
-    {
-        OnRecv = callback;
-    }
+    m_OnRecv = ( callback ) ? callback : m_OnRecv;
 }
 
-void UDPASocket::RegisterOnSend ( const EventSend& callback )
+void UDPSocketHT::RegisterCallback ( const EventSend& callback )
 {
     std::lock_guard<std::recursive_mutex> lock ( m_Locker );
-    if ( callback )
-    {
-        OnSend = callback;
-    }
+    OnSend = ( callback ) ? callback : OnSend;
 }
 
-std::string UDPASocket::GetId ( ) const
+std::string UDPSocketHT::GetId ( ) const
 {
     static const std::string udp ( "UDP : " );
     if ( m_hSocket != INVALID_SOCKET )
@@ -596,19 +174,20 @@ std::string UDPASocket::GetId ( ) const
     }
 }
 
-void UDPASocket::UnregisterAllCallbacks ( )
+void UDPSocketHT::UnregisterCallbacks ( )
 {
     std::lock_guard<std::recursive_mutex> lock ( m_Locker );
     OnClose = nullptr;
-    OnRecv = nullptr;
+    m_OnRecv = nullptr;
     OnSend = nullptr;
 }
 
-void UDPASocket::RegisterOnCompletionPort ( CompletionPort& port )
-{ 
+void UDPSocketHT::RegisterOnCompletionPort ( CompletionPort& port )
+{
+    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
     if ( IsValid ( ) && !m_pCompletionKey )
     {
-        m_pCompletionKey = new std::shared_ptr<UDPASocket> ( shared_from_this ( ) );
+        m_pCompletionKey = new std::shared_ptr<UDPSocketHT> ( shared_from_this ( ) );
         auto result = port.RegisterHandle ( ( HANDLE ) m_hSocket , ( ULONG_PTR ) m_pCompletionKey );
         if ( !result )
         {
@@ -618,82 +197,96 @@ void UDPASocket::RegisterOnCompletionPort ( CompletionPort& port )
         }
     }
 }
-void UDPASocket::EventHandlerRecvFrom ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
+
+void UDPSocketHT::HandleEvents ( OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
-    std::lock_guard<std::recursive_mutex> lock ( socket->m_Locker );
-    socket->m_nBtRcv += bytesTransferred;
-    ev->Flags = bytesTransferred;
-    if ( ev->SequenceNum - socket->m_nRcvSeqCompleted > 1 )
+    switch ( ev->Operation )
     {
-        socket->m_RrdQueue [ ev->SequenceNum ] = ev;
-    }
-    else if ( ev->SequenceNum - socket->m_nRcvSeqCompleted == 1 )
-    {
-        if ( socket->OnRecv )
-        {
-            socket->OnRecv ( *socket , &ev->NetAddr , ev->Buffer , bytesTransferred );
-        }
-        socket->m_nRcvSeqCompleted++;
-        ev->reset ( );
-        socket->m_nPendingOperations--;
-        socket->RequestRecvFrom ( ThreadPool::Instance ( ) , ev );
-        while ( !socket->m_RrdQueue.empty ( ) )
-        {
-            auto it = socket->m_RrdQueue.find ( socket->m_nRcvSeqCompleted + 1 );
-            if ( it != socket->m_RrdQueue.end ( ) )
-            {
-                auto ev_t= it->second;
-                if ( socket->OnRecv )
-                {
-                    socket->OnRecv ( *socket , &ev_t->NetAddr , ev_t->Buffer , ev_t->Flags );
-                }
-                socket->m_nRcvSeqCompleted++;
-                socket->m_RrdQueue.erase ( ev_t->SequenceNum );
-                ev_t->reset ( );
-                socket->m_nPendingOperations--;
-                socket->RequestRecvFrom ( ThreadPool::Instance ( ) , ev_t );
-            }
-            else
-            {
-                break;
-            }
-        }
+        case OverlappedEx::RecvFrom:
+            EventHandlerRecvFrom ( ev , bytesTransferred , statusCode );
+            break;
+        case OverlappedEx::SendTo:
+            EventHandlerSendTo ( ev , bytesTransferred , statusCode );
+            break;
+        case OverlappedEx::Req_SendTo:
+            EventHandlerRequestSendTo ( ev , bytesTransferred , statusCode );
+            break;
+        case OverlappedEx::Req_RecvFrom:
+            EventHandlerRequestRecvFrom ( ev , bytesTransferred , statusCode );
+            break;
+        default:
+            EventHandlerClose ( ev , bytesTransferred , statusCode );
+            break;
     }
 }
 
-void UDPASocket::EventHandlerSendTo ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
+void UDPSocketHT::EventHandlerRecvFrom ( OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
-    std::lock_guard<std::recursive_mutex> lock ( socket->m_Locker );
-    socket->m_nBtSnt += bytesTransferred;
-    if ( socket->OnSend )
+    m_nBtRcv += bytesTransferred;
+    auto fastrecv = [ & ] ( OverlappedEx* ev_struct )->void
     {
-        socket->OnSend ( *socket , &ev->NetAddr , bytesTransferred );
+        ev_struct->Operation = OverlappedEx::RecvFrom;
+        //ev_struct->SequenceNum = socket->m_nRcvSeqPosted++;
+        WSABUF buf;
+        buf.buf = ev_struct->Buffer;
+        buf.len = ev_struct->Length;
+        auto result = RecvFrom ( ev_struct , &buf , 1 );
+    };
+    m_nBtRcv += bytesTransferred;
+    if ( m_OnRecv )
+    {
+        m_OnRecv ( *this , &ev->NetAddr , ev->Buffer , bytesTransferred );
+    }
+    ev->reset ( );
+    m_nPendingOperations--;
+    if ( !m_nSimultaneousRecvCalls || ( m_nPendingOperations + 1 <= m_nSimultaneousRecvCalls ) )
+    {
+        fastrecv ( ev );
+    }
+    else
+    {
+        ThreadPool::Instance ( ).Free ( ev );
+    }
+}
+
+void UDPSocketHT::EventHandlerSendTo ( OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
+{
+    //std::lock_guard<std::recursive_mutex> lock ( socket->m_Locker );
+    m_nBtSnt += bytesTransferred;
+    if ( OnSend )
+    {
+        OnSend ( *this , &ev->NetAddr , bytesTransferred );
     }
     ThreadPool::Instance ( ).Free ( ev );
-    socket->m_nPendingOperations--;
+    m_nPendingOperations--;
 }
 
-void UDPASocket::EventHandlerRequestRecvFrom ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
+void UDPSocketHT::EventHandlerRequestRecvFrom ( OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
-    std::lock_guard<std::recursive_mutex> lock ( socket->m_Locker );
-    ev->Operation = OverlappedEx::RecvFrom;
-    ev->SequenceNum = socket->m_nRcvSeqPosted++;
-    WSABUF buf;
-    buf.buf = ev->Buffer;
-    buf.len = ev->Length;
-    auto result = socket->RecvFrom ( ev , &buf , 1 );
+    if ( !m_nSimultaneousRecvCalls || ( m_nPendingOperations + 1 <= m_nSimultaneousRecvCalls ) )
+    {
+        ev->Operation = OverlappedEx::RecvFrom;
+        //ev->SequenceNum = socket->m_nRcvSeqPosted++;
+        WSABUF buf;
+        buf.buf = ev->Buffer;
+        buf.len = ev->Length;
+        auto result = RecvFrom ( ev , &buf , 1 );
+    }
+    else
+    {
+        ThreadPool::Instance ( ).Free ( ev );
+    }
 }
 
-void UDPASocket::EventHandlerRequestSendTo ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
+void UDPSocketHT::EventHandlerRequestSendTo ( OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
-    std::lock_guard<std::recursive_mutex> lock ( socket->m_Locker );
     ev->Operation = OverlappedEx::SendTo;
     WSABUF buf;
     buf.buf = ev->BufferHolder.buf;
     buf.len = ev->BufferHolder.len;
-    auto result = socket->SendTo ( ev , &buf , 1 );
+    auto result = SendTo ( ev , &buf , 1 );
 }
-void UDPASocket::Close ( )
+void UDPSocketHT::Close ( )
 {
     std::lock_guard<std::recursive_mutex> lock ( m_Locker );
     if ( m_hSocket != INVALID_SOCKET )
@@ -713,59 +306,84 @@ void UDPASocket::Close ( )
         }
     }
 }
-void UDPASocket::EventHandlerClose ( std::shared_ptr<UDPASocket>& socket , OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
+void UDPSocketHT::EventHandlerClose ( OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
-    std::unique_lock<std::recursive_mutex> lock ( socket->m_Locker );
-    if ( socket->IsValid ( ) )
+    std::unique_lock<std::recursive_mutex> lock ( m_Locker );
+    if ( IsValid ( ) )
     {
-        socket->Close ( );
+        Close ( );
     }
-    if ( socket->OnClose )
+    if ( OnClose )
     {
-        socket->OnClose ( *socket , statusCode ); //one-shot only
-        socket->UnregisterAllCallbacks ( );
+        OnClose ( *this , statusCode ); //one-shot only
+        UnregisterCallbacks ( );
     }
-    socket->m_nPendingOperations--;
-    if ( !socket->m_RrdQueue.empty ( ) )
+    m_nPendingOperations--;
+    //if ( !socket->m_RrdQueue.empty ( ) )
+    //{
+    //    for ( auto&i : socket->m_RrdQueue )
+    //    { 
+    //        auto ev_t = i.second;
+    //        ev_t->reset ( );
+    //        socket->m_RrdQueue.erase ( i.first );
+    //        socket->m_nPendingOperations--;
+    //        ThreadPool::Instance ( ).Free ( ev_t );
+    //    }
+    //}
+    if ( m_nPendingOperations == 0 )
     {
-        for ( auto&i : socket->m_RrdQueue )
-        { 
-            auto ev_t = i.second;
-            ev_t->reset ( );
-            socket->m_RrdQueue.erase ( i.first );
-            socket->m_nPendingOperations--;
-            ThreadPool::Instance ( ).Free ( ev_t );
-        }
-    }
-    if ( socket->m_nPendingOperations == 0 )
-    {
-        auto ptr = &socket;
-        socket->m_pCompletionKey = nullptr;
+        auto ptr = this->m_pCompletionKey;
+        m_pCompletionKey = nullptr;
         lock.unlock ( );
         delete ptr;
     }
     ThreadPool::Instance ( ).Free ( ev );
 }
 
-UDPASocket::UDPASocket ( ) :
-    m_nRcvSeqCompleted ( 0 ) ,
-    m_nRcvSeqPosted ( 1 ) ,
+UDPSocketHT::UDPSocketHT ( ) :
+    //m_nRcvSeqCompleted ( 0 ) ,
+    //m_nRcvSeqPosted ( 1 ) ,
     m_pCompletionKey ( nullptr ) ,
     NetworkSocket ( UDP )
 {
 }
 
-std::shared_ptr<TCPASocket> TCPASocket::Create ( )
+std::shared_ptr<TCPSocketSQ> TCPSocketSQ::Create ( )
 {
-    return std::make_shared<TCPASocket> ( );
+    return std::make_shared<TCPSocketSQ> ( );
 }
 
-void TCPASocket::Listen ( )
+void TCPSocketSQ::Listen ( )
 {
 
 }
 
-std::string TCPASocket::GetId ( ) const
+void TCPSocketSQ::RequestAccept ( CompletionPort& , OverlappedEx* ev /*= nullptr */ )
+{
+
+}
+
+void TCPSocketSQ::RequestConnect ( CompletionPort& , NetworkAddress& , OverlappedEx* ev /*= nullptr */ )
+{
+
+}
+
+void TCPSocketSQ::RequestDisconnect ( CompletionPort& , OverlappedEx* ev /*= nullptr */ )
+{
+
+}
+
+void TCPSocketSQ::RequestRecv ( CompletionPort& , OverlappedEx* ev /*= nullptr */ )
+{
+
+}
+
+void TCPSocketSQ::RequestSend ( CompletionPort& , char* buffer , DWORD len , OverlappedEx* ev /*= nullptr */ )
+{
+
+}
+
+std::string TCPSocketSQ::GetId ( ) const
 {
     static const std::string udp ( "TCP : " );
     if ( m_hSocket != INVALID_SOCKET )
@@ -778,69 +396,179 @@ std::string TCPASocket::GetId ( ) const
     }
 }
 
-void TCPASocket::Close ( )
+void TCPSocketSQ::Close ( )
+{
+    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
+    if ( m_hSocket != INVALID_SOCKET )
+    {
+        if ( closesocket ( m_hSocket ) == SOCKET_ERROR )
+        {
+            SYSTEM_ERROR ( "Error during closing socket" );
+        }
+        else
+        {
+            m_hSocket = INVALID_SOCKET;
+            if ( !m_nPendingOperations && m_pCompletionKey )
+            {
+                delete m_pCompletionKey;
+                m_pCompletionKey = nullptr;
+            }
+        }
+    }
+}
+
+void TCPSocketSQ::RegisterCallback ( const EventAccept& cb )
+{
+    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
+    OnAccept = ( cb ) ? cb : OnAccept;
+}
+
+void TCPSocketSQ::RegisterCallback ( const EventConnect& cb )
+{
+    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
+    OnConnect = ( cb ) ? cb : OnConnect;
+}
+
+void TCPSocketSQ::RegisterCallback ( const EventDisconnect& cb )
+{
+    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
+    OnDisconnect = ( cb ) ? cb : OnDisconnect;
+}
+
+void TCPSocketSQ::RegisterCallback ( const EventRecv& cb )
+{
+    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
+    OnRecv = ( cb ) ? cb : OnRecv;
+}
+
+void TCPSocketSQ::RegisterCallback ( const EventSend& cb )
+{
+    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
+    OnSend = ( cb ) ? cb : OnSend;
+}
+
+void TCPSocketSQ::InheritCallbacks ( NetworkSocket* )
 {
 
 }
 
-void TCPASocket::RegisterOnAccept ( const EventAccept& )
+void TCPSocketSQ::RegisterOnCompletionPort ( CompletionPort& )
 {
 
 }
 
-void TCPASocket::RegisterOnConnect ( const EventConnect& )
+void TCPSocketSQ::HandleEvents ( OverlappedEx* , DWORD bytesTransferred , DWORD statusCode )
 {
 
 }
 
-void TCPASocket::RegisterOnDisconnect ( const EventDisconnect& )
+STATUS TCPSocketSQ::Accept ( OverlappedEx* ev )
 {
 
 }
 
-void TCPASocket::RegisterOnRecv ( const EventRecv& )
+STATUS TCPSocketSQ::Connect ( )
 {
 
 }
 
-void TCPASocket::RegisterOnSend ( const EventSend& )
+STATUS TCPSocketSQ::Disconnect ( )
 {
 
 }
 
-void TCPASocket::InheritCallbacks ( NetworkSocket* )
+STATUS TCPSocketSQ::Recv ( OverlappedEx* ev , LPWSABUF buf , DWORD count )
 {
 
 }
 
-void TCPASocket::RegisterOnCompletionPort ( CompletionPort& )
+STATUS TCPSocketSQ::Send ( OverlappedEx* ev , LPWSABUF buf , DWORD count )
 {
 
 }
 
-void TCPASocket::EventHandlerAccept ( std::shared_ptr<TCPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode )
+void TCPSocketSQ::EventHandlerAccept ( OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
+    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
 
 }
 
-void TCPASocket::EventHandlerConnect ( std::shared_ptr<TCPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode )
+void TCPSocketSQ::EventHandlerConnect ( OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
-
+    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
 }
 
-void TCPASocket::EventHandlerDisconnect ( std::shared_ptr<TCPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode )
+void TCPSocketSQ::EventHandlerDisconnect ( OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
-
+    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
 }
 
-void TCPASocket::EventHandlerRecv ( std::shared_ptr<TCPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode )
+void TCPSocketSQ::EventHandlerRecv ( OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
+    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
+    auto fastrecv = [ & ] ( OverlappedEx* ev_struct )->void
+    {
+        ev_struct->Operation = OverlappedEx::RecvFrom;
+        ev_struct->SequenceNum = m_nRcvSeqPosted++;
+        WSABUF buf;
+        buf.buf = ev_struct->Buffer;
+        buf.len = ev_struct->Length;
+        Recv ( ev_struct , &buf , 1 );
+    };
+    ev->Flags = bytesTransferred;
+    if ( ev->SequenceNum - m_nRcvSeqCompleted > 1 )
+    {
+        m_RcvQueue [ ev->SequenceNum ] = ev;
+    }
+    else if ( ev->SequenceNum - m_nRcvSeqCompleted == 1 )
+    {
+        if ( OnRecv )
+        {
+            OnRecv ( *this , ev->Buffer , bytesTransferred );
+        }
+        m_nBtRcv += bytesTransferred;
+        m_nRcvSeqCompleted++;
+        ev->reset ( );
+        m_nPendingOperations--;
 
+        fastrecv ( ev );
+        //socket->RequestRecvFrom ( ThreadPool::Instance ( ) , ev );
+
+        while ( !m_RcvQueue.empty ( ) )
+        {
+            auto it = m_RcvQueue.find ( m_nRcvSeqCompleted + 1 );
+            if ( it != m_RcvQueue.end ( ) )
+            {
+                auto ev_t = it->second;
+                if ( OnRecv )
+                {
+                    OnRecv ( *this , ev_t->Buffer , ev_t->Flags );
+                }
+                m_nRcvSeqCompleted++;
+                m_RcvQueue.erase ( ev_t->SequenceNum );
+                m_nBtRcv += ev_t->Flags;
+                ev_t->reset ( );
+                m_nPendingOperations--;
+
+                fastrecv ( ev_t );
+                //socket->RequestRecvFrom ( ThreadPool::Instance ( ) , ev_t );
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
 }
 
-void TCPASocket::EventHandlerSend ( std::shared_ptr<TCPASocket>& socket , OverlappedEx* ev , DWORD bytesTranseferred , DWORD statusCode )
+void TCPSocketSQ::EventHandlerSend ( OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode )
 {
+    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
+}
 
+void TCPSocketSQ::EventHandlerClose ( OverlappedEx* , DWORD , DWORD )
+{
+    std::lock_guard<std::recursive_mutex> lock ( m_Locker );
 }
 
 void NetworkSocket::Bind ( unsigned short int port )
@@ -861,7 +589,7 @@ void NetworkSocket::InheritCallbacks ( NetworkSocket* )
 
 }
 
-void NetworkSocket::RegisterOnIoctl ( const EventIoctl& )
+void NetworkSocket::RegisterCallback ( const EventIoctl& )
 {
 
 }

@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include <string>
 #include <atomic>
+#include <Overlapped.h>
 class CompletionPort
 {
     HANDLE m_hPort;
@@ -52,6 +53,7 @@ class Async
 {
 protected:
     std::atomic<size_t> m_nPendingOperations;
+    std::atomic<size_t> m_nMaxPendingOperations;
 public:
     Async ( ) :
         m_nPendingOperations ( 0 )
@@ -62,5 +64,6 @@ public:
         return m_nPendingOperations;
     }
     virtual void RegisterOnCompletionPort ( CompletionPort& ) = 0;
+    virtual void HandleEvents ( OverlappedEx* ev , DWORD bytesTransferred , DWORD statusCode ) = 0;
 };
 #endif
